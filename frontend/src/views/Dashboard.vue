@@ -270,6 +270,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useMonitoringStore } from '@/stores/monitoring'
+import { getGroupStats, getMonitoringAlerts } from '@/api'
 import { ElMessage } from 'element-plus'
 import {
   ChatLineRound,
@@ -292,6 +293,7 @@ const searchText = ref('')
 const filterStatus = ref('all')
 const currentPage = ref(1)
 const pageSize = ref(10)
+const loading = ref(false)
 
 const filteredGroups = computed(() => {
   let result = groups.value
@@ -310,69 +312,38 @@ const filteredGroups = computed(() => {
 })
 
 async function fetchData() {
+  loading.value = true
   try {
+    // 获取概览数据
     await monitoringStore.fetchOverview()
     if (monitoringStore.overview && Object.keys(monitoringStore.overview).length > 0) {
       overview.value = monitoringStore.overview
     }
+
+    // 获取群聊统计数据（真实数据）
+    const groupStatsRes = await getGroupStats()
+    if (groupStatsRes.data && groupStatsRes.data.length > 0) {
+      groups.value = groupStatsRes.data
+    }
+
+    // 获取告警数据（真实数据）
+    const alertsRes = await getMonitoringAlerts()
+    if (alertsRes.data && alertsRes.data.length > 0) {
+      alerts.value = alertsRes.data
+    } else {
+      alerts.value = []
+    }
+
+    // 获取消息列表
     await monitoringStore.fetchMessages()
     if (monitoringStore.messages && monitoringStore.messages.length > 0) {
       messages.value = monitoringStore.messages
     }
   } catch (error) {
     console.error('获取数据失败:', error)
-    ElMessage.error('获取数据失败，使用模拟数据')
-  }
-  
-  // 确保群聊数据存在
-  if (!groups.value || groups.value.length === 0) {
-    groups.value = [
-      { id: 'chat_001', name: '客户服务A群', todayMessages: 286, unreplied: 3, averageResponseTime: 15.2, lastActive: '10:28', status: 'abnormal' },
-      { id: 'chat_002', name: '技术支持B群', todayMessages: 152, unreplied: 2, averageResponseTime: 22.5, lastActive: '10:15', status: 'abnormal' },
-      { id: 'chat_003', name: '产品咨询C群', todayMessages: 98, unreplied: 1, averageResponseTime: 12.3, lastActive: '10:22', status: 'warning' },
-      { id: 'chat_004', name: '售后服务D群', todayMessages: 76, unreplied: 0, averageResponseTime: 3.1, lastActive: '10:31', status: 'normal' },
-      { id: 'chat_005', name: '商务合作E群', todayMessages: 45, unreplied: 0, averageResponseTime: 2.8, lastActive: '09:45', status: 'normal' },
-      { id: 'chat_006', name: '运营管理F群', todayMessages: 67, unreplied: 0, averageResponseTime: 4.5, lastActive: '10:18', status: 'normal' },
-      { id: 'chat_007', name: '市场推广G群', todayMessages: 34, unreplied: 0, averageResponseTime: 3.8, lastActive: '10:05', status: 'normal' },
-      { id: 'chat_008', name: '人力资源H群', todayMessages: 23, unreplied: 0, averageResponseTime: 2.5, lastActive: '09:30', status: 'normal' },
-      { id: 'chat_009', name: '财务审批I群', todayMessages: 18, unreplied: 0, averageResponseTime: 3.2, lastActive: '09:15', status: 'normal' },
-      { id: 'chat_010', name: '研发团队J群', todayMessages: 124, unreplied: 0, averageResponseTime: 5.8, lastActive: '10:25', status: 'normal' },
-      { id: 'chat_011', name: '测试团队K群', todayMessages: 89, unreplied: 0, averageResponseTime: 4.2, lastActive: '10:10', status: 'normal' },
-      { id: 'chat_012', name: '设计团队L群', todayMessages: 56, unreplied: 0, averageResponseTime: 3.6, lastActive: '10:00', status: 'normal' }
-    ]
-  }
-  
-  // 确保告警数据存在
-  if (!alerts.value || alerts.value.length === 0) {
-    alerts.value = [
-      {
-        id: 1,
-        priority: 'emergency',
-        timeout: 35,
-        time: '10:28',
-        groupName: '客户服务A群',
-        content: '请问你们的产品什么时候能发货？我上周就已经下单了，现在还没有收到任何通知...',
-        responsiblePerson: '李客服'
-      },
-      {
-        id: 2,
-        priority: 'emergency',
-        timeout: 28,
-        time: '10:15',
-        groupName: '技术支持B群',
-        content: '系统报错：无法连接到数据库，请技术支持人员尽快回复！',
-        responsiblePerson: '王技术'
-      },
-      {
-        id: 3,
-        priority: 'warning',
-        timeout: 15,
-        time: '10:22',
-        groupName: '产品咨询C群',
-        content: '我想了解一下你们的新功能什么时候上线？',
-        responsiblePerson: '张产品'
-      }
-    ]
+    ElMessage.error('获取数据失败')
+  } finally {
+    loading.value = false
   }
 }
 

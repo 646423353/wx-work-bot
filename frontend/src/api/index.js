@@ -15,6 +15,20 @@ export function getMessages(params) {
   })
 }
 
+export function getGroupStats() {
+  return request({
+    url: '/monitoring/group-stats',
+    method: 'get'
+  })
+}
+
+export function getMonitoringAlerts() {
+  return request({
+    url: '/monitoring/alerts',
+    method: 'get'
+  })
+}
+
 export function getGroups() {
   return request({
     url: '/groups',

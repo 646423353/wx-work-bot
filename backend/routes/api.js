@@ -4,6 +4,20 @@ const db = require('../utils/database');
 const monitorService = require('../services/monitorService');
 const wechatService = require('../services/wechatService');
 
+// 企业微信加解密库（可选，如果安装了@wecom/crypto则使用）
+let wecomCrypto;
+try {
+  wecomCrypto = require('@wecom/crypto');
+  console.log('@wecom/crypto 已加载');
+} catch (e) {
+  console.log('@wecom/crypto 未安装，将使用简化验证模式');
+}
+
+// 从环境变量获取企业微信配置
+const CORP_ID = process.env.CORP_ID || '';
+const TOKEN = process.env.TOKEN || '';
+const ENCODING_AES_KEY = process.env.ENCODING_AES_KEY || '';
+
 const responseWrapper = (data = null, message = 'success', code = 200) => {
   return { code, message, data };
 };
@@ -24,7 +38,7 @@ router.get('/monitoring/overview', (req, res) => {
         res.json(errorWrapper('获取数据失败'));
         return;
       }
-      
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       db.get('SELECT COUNT(*) as count FROM messages WHERE sent_at >= ?', [today.toISOString()], (err, messageCount) => {
@@ -33,21 +47,21 @@ router.get('/monitoring/overview', (req, res) => {
           res.json(errorWrapper('获取数据失败'));
           return;
         }
-        
+
         db.get('SELECT COUNT(*) as count FROM messages WHERE reply_status = 0', (err, unrepliedCount) => {
           if (err) {
             console.error('获取未回复消息数失败:', err.message);
             res.json(errorWrapper('获取数据失败'));
             return;
           }
-          
+
           db.get('SELECT AVG(CAST((julianday(reply_time) - julianday(sent_at)) * 24 * 60 AS INTEGER)) as avg_response_time FROM messages WHERE reply_status = 1', (err, avgResponseTime) => {
             if (err) {
               console.error('获取平均响应时间失败:', err.message);
               res.json(errorWrapper('获取数据失败'));
               return;
             }
-            
+
             res.json(responseWrapper({
               monitoredGroupsCount: groupCount.count || 0,
               todayMessagesCount: messageCount.count || 0,
@@ -60,6 +74,110 @@ router.get('/monitoring/overview', (req, res) => {
     });
   } catch (error) {
     console.error('获取监控概览数据失败:', error.message);
+    res.json(errorWrapper('获取数据失败'));
+  }
+});
+
+// 获取群聊统计数据（用于监控仪表盘）
+router.get('/monitoring/group-stats', (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString();
+
+    // 查询每个群聊的今日消息统计
+    db.all(`
+      SELECT 
+        g.group_id,
+        g.group_name,
+        COUNT(m.id) as todayMessages,
+        SUM(CASE WHEN m.reply_status = 0 THEN 1 ELSE 0 END) as unreplied,
+        AVG(CASE WHEN m.reply_status = 1 THEN (julianday(m.reply_time) - julianday(m.sent_at)) * 24 * 60 END) as avgResponseMinutes,
+        MAX(m.sent_at) as lastActive
+      FROM groups g
+      LEFT JOIN messages m ON g.group_id = m.group_id AND m.sent_at >= ?
+      WHERE g.status = 1
+      GROUP BY g.group_id, g.group_name
+      ORDER BY todayMessages DESC
+    `, [todayStr], (err, rows) => {
+      if (err) {
+        console.error('获取群聊统计数据失败:', err.message);
+        res.json(errorWrapper('获取数据失败'));
+        return;
+      }
+
+      const stats = rows.map(row => {
+        const avgTime = row.avgResponseMinutes || 0;
+        let status = 'normal';
+        if (row.unreplied > 2 || avgTime > 20) {
+          status = 'abnormal';
+        } else if (row.unreplied > 0 || avgTime > 10) {
+          status = 'warning';
+        }
+
+        return {
+          id: row.group_id,
+          name: row.group_name,
+          todayMessages: row.todayMessages || 0,
+          unreplied: row.unreplied || 0,
+          averageResponseTime: avgTime > 0 ? avgTime.toFixed(1) : '0.0',
+          lastActive: row.lastActive ? new Date(row.lastActive).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '--:--',
+          status: status
+        };
+      });
+
+      res.json(responseWrapper(stats));
+    });
+  } catch (error) {
+    console.error('获取群聊统计数据失败:', error.message);
+    res.json(errorWrapper('获取数据失败'));
+  }
+});
+
+// 获取未回复告警列表
+router.get('/monitoring/alerts', (req, res) => {
+  try {
+    const timeoutMinutes = 30; // 超时时间（分钟）
+
+    db.all(`
+      SELECT 
+        m.id,
+        m.message_id,
+        m.content,
+        m.sent_at,
+        g.group_name,
+        m.sender_name,
+        (julianday('now') - julianday(m.sent_at)) * 24 * 60 as timeout_minutes
+      FROM messages m
+      JOIN groups g ON m.group_id = g.group_id
+      WHERE m.reply_status = 0
+        AND (julianday('now') - julianday(m.sent_at)) * 24 * 60 > ?
+      ORDER BY m.sent_at ASC
+      LIMIT 20
+    `, [timeoutMinutes], (err, rows) => {
+      if (err) {
+        console.error('获取告警列表失败:', err.message);
+        res.json(errorWrapper('获取数据失败'));
+        return;
+      }
+
+      const alerts = rows.map(row => {
+        const timeout = Math.floor(row.timeout_minutes);
+        return {
+          id: row.id,
+          priority: timeout > 60 ? 'emergency' : 'warning',
+          timeout: timeout,
+          time: new Date(row.sent_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+          groupName: row.group_name,
+          content: row.content,
+          responsiblePerson: row.sender_name
+        };
+      });
+
+      res.json(responseWrapper(alerts));
+    });
+  } catch (error) {
+    console.error('获取告警列表失败:', error.message);
     res.json(errorWrapper('获取数据失败'));
   }
 });
@@ -422,23 +540,56 @@ router.post('/wechat/message', (req, res) => {
   }
 });
 
-// 企业微信消息回调接口
+// 企业微信消息回调接口 - URL验证
 router.get('/webhook', (req, res) => {
   try {
-    const { msg_signature, timestamp, nonce, echostr } = req.query;
-    
+    let { msg_signature, timestamp, nonce, echostr } = req.query;
+
     console.log('收到企业微信验证请求:', {
       msg_signature,
       timestamp,
       nonce,
       echostr: echostr ? '存在' : '不存在'
     });
-    
-    // TODO: 实现企业微信消息签名验证
-    // 这里简化处理，直接返回 echostr 完成验证
-    // 生产环境需要验证签名
-    
+
+    // 对echostr进行URL解码
     if (echostr) {
+      echostr = decodeURIComponent(echostr);
+    }
+
+    // 如果安装了@wecom/crypto，使用官方库进行验证和解密
+    if (wecomCrypto && TOKEN && ENCODING_AES_KEY) {
+      try {
+        // 1. 验证签名
+        const signature = wecomCrypto.getSignature(TOKEN, timestamp, nonce, echostr);
+        if (signature !== msg_signature) {
+          console.error('签名验证失败');
+          res.status(403).send('fail');
+          return;
+        }
+
+        // 2. 解密echostr
+        const decrypted = wecomCrypto.decrypt(ENCODING_AES_KEY, echostr);
+        console.log('解密后的echostr:', decrypted.message);
+
+        // 3. 返回解密后的明文（必须原样返回，不能加引号，不能有bom头，不能有换行符）
+        res.setHeader('Content-Type', 'text/plain');
+        res.send(decrypted.message);
+        return;
+      } catch (cryptoError) {
+        console.error('企业微信解密失败:', cryptoError.message);
+        // 解密失败时返回fail
+        res.status(500).send('fail');
+        return;
+      }
+    }
+
+    // 如果没有安装加密库或缺少配置，使用简化模式（仅用于测试）
+    console.warn('警告: 使用简化验证模式，生产环境请安装@wecom/crypto并配置环境变量');
+
+    if (echostr) {
+      // 简化模式直接返回echostr（仅用于测试，生产环境不安全）
+      res.setHeader('Content-Type', 'text/plain');
       res.send(echostr);
     } else {
       res.send('success');
@@ -453,27 +604,123 @@ router.post('/webhook', (req, res) => {
   try {
     const { msg_signature, timestamp, nonce } = req.query;
     const xmlData = req.body;
-    
+
     console.log('收到企业微信消息推送:', {
       msg_signature,
       timestamp,
       nonce,
       body: xmlData
     });
-    
-    // TODO: 实现企业微信消息解密和处理
-    // 1. 验证消息签名
-    // 2. 解密消息内容
-    // 3. 解析XML消息
-    // 4. 存储消息到数据库
-    // 5. 触发告警检查
-    
-    // 简化处理：直接返回 success
+
+    // 如果安装了@wecom/crypto，使用官方库进行解密
+    if (wecomCrypto && TOKEN && ENCODING_AES_KEY) {
+      try {
+        // 从XML中提取加密消息
+        const encryptMatch = xmlData.match(/<Encrypt><!\[CDATA\[(.*?)\]\]><\/Encrypt>/);
+        if (!encryptMatch) {
+          console.error('无法从XML中提取加密消息');
+          res.status(400).send('fail');
+          return;
+        }
+        const encrypt = encryptMatch[1];
+
+        // 1. 验证签名
+        const signature = wecomCrypto.getSignature(TOKEN, timestamp, nonce, encrypt);
+        if (signature !== msg_signature) {
+          console.error('签名验证失败');
+          res.status(403).send('fail');
+          return;
+        }
+
+        // 2. 解密消息
+        const decrypted = wecomCrypto.decrypt(ENCODING_AES_KEY, encrypt);
+        console.log('解密后的消息:', decrypted.message);
+
+        // 3. 解析XML消息
+        const message = parseWechatMessage(decrypted.message);
+
+        if (message) {
+          // 4. 存储消息到数据库
+          storeMessage(message);
+
+          // 5. 触发告警检查
+          monitorService.processNewMessage(message);
+        }
+
+        res.send('success');
+        return;
+      } catch (cryptoError) {
+        console.error('企业微信消息解密失败:', cryptoError.message);
+        res.status(500).send('fail');
+        return;
+      }
+    }
+
+    // 如果没有安装加密库，记录日志并返回success（测试模式）
+    console.warn('警告: 未安装@wecom/crypto，无法解密消息。生产环境请安装并配置环境变量');
+    console.log('原始消息内容:', xmlData);
+
     res.send('success');
   } catch (error) {
     console.error('处理企业微信消息失败:', error.message);
     res.status(500).send('fail');
   }
 });
+
+// 解析企业微信XML消息
+function parseWechatMessage(xmlData) {
+  try {
+    // 简单的XML解析（生产环境建议使用xml2js库）
+    const xml2js = require('xml2js');
+    let message = null;
+    
+    xml2js.parseString(xmlData, { explicitArray: false }, (err, result) => {
+      if (err) {
+        console.error('解析XML失败:', err.message);
+        return;
+      }
+      
+      const xml = result.xml;
+      if (xml) {
+        message = {
+          message_id: xml.MsgId || `msg_${Date.now()}`,
+          group_id: xml.FromUserName || '',
+          sender_id: xml.FromUserName || '',
+          sender_name: xml.FromUserName || '',
+          content: xml.Content || '',
+          msg_type: xml.MsgType || 'text',
+          sent_at: new Date().toISOString(),
+          reply_status: 0
+        };
+      }
+    });
+    
+    return message;
+  } catch (error) {
+    console.error('解析消息失败:', error.message);
+    return null;
+  }
+}
+
+// 存储消息到数据库
+function storeMessage(message) {
+  try {
+    db.run(
+      `INSERT INTO messages (message_id, group_id, sender_id, sender_name, content, msg_type, sent_at, reply_status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [message.message_id, message.group_id, message.sender_id, message.sender_name, 
+       message.content, message.msg_type, message.sent_at, message.reply_status],
+      (err) => {
+        if (err) {
+          console.error('存储消息失败:', err.message);
+        } else {
+          console.log('消息已存储:', message.message_id);
+        }
+      }
+    );
+  } catch (error) {
+    console.error('存储消息失败:', error.message);
+  }
+}
 
 module.exports = router;
