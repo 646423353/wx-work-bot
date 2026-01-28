@@ -422,4 +422,58 @@ router.post('/wechat/message', (req, res) => {
   }
 });
 
+// 企业微信消息回调接口
+router.get('/webhook', (req, res) => {
+  try {
+    const { msg_signature, timestamp, nonce, echostr } = req.query;
+    
+    console.log('收到企业微信验证请求:', {
+      msg_signature,
+      timestamp,
+      nonce,
+      echostr: echostr ? '存在' : '不存在'
+    });
+    
+    // TODO: 实现企业微信消息签名验证
+    // 这里简化处理，直接返回 echostr 完成验证
+    // 生产环境需要验证签名
+    
+    if (echostr) {
+      res.send(echostr);
+    } else {
+      res.send('success');
+    }
+  } catch (error) {
+    console.error('处理企业微信验证请求失败:', error.message);
+    res.status(500).send('fail');
+  }
+});
+
+router.post('/webhook', (req, res) => {
+  try {
+    const { msg_signature, timestamp, nonce } = req.query;
+    const xmlData = req.body;
+    
+    console.log('收到企业微信消息推送:', {
+      msg_signature,
+      timestamp,
+      nonce,
+      body: xmlData
+    });
+    
+    // TODO: 实现企业微信消息解密和处理
+    // 1. 验证消息签名
+    // 2. 解密消息内容
+    // 3. 解析XML消息
+    // 4. 存储消息到数据库
+    // 5. 触发告警检查
+    
+    // 简化处理：直接返回 success
+    res.send('success');
+  } catch (error) {
+    console.error('处理企业微信消息失败:', error.message);
+    res.status(500).send('fail');
+  }
+});
+
 module.exports = router;
