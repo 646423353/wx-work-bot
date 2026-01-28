@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息监控助手 Logo 预览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+        
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .logo-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .logo-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .logo-card h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .badge {
+            background: #0073E6;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: normal;
+        }
+        
+        .badge.secondary {
+            background: #52C41A;
+        }
+        
+        .badge.third {
+            background: #FAAD14;
+        }
+        
+        .logo-preview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .logo-preview svg {
+            width: 150px;
+            height: 150px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+        }
+        
+        .logo-info {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .logo-info p {
+            margin-bottom: 8px;
+        }
+        
+        .size-demo {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        
+        .size-demo h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .size-grid {
+            display: flex;
+            align-items: flex-end;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .size-item {
+            text-align: center;
+        }
+        
+        .size-item .label {
+            color: #999;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        .usage-guide {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .usage-guide h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .usage-item {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #0073E6;
+        }
+        
+        .usage-item h4 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .usage-item p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            background: #0073E6;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 15px;
+            transition: background 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            background: #0052A3;
+        }
+        
+        .color-palette {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .color-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .color-code {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>消息监控助手 Logo 设计方案</h1>
+        <p class="subtitle">企业微信风格 · 专业 · 简洁 · 易识别</p>
+        
+        <div class="logo-grid">
+            <!-- 方案一 -->
+            <div class="logo-card">
+                <h3>方案一：对话气泡 + 监控眼 <span class="badge">推荐</span></h3>
+                <div class="logo-preview">
+                    <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="mainGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0073E6"/>
+                                <stop offset="100%" style="stop-color:#0052A3"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="100" cy="100" r="90" fill="url(#mainGradient1)"/>
+                        <path d="M 50 60 Q 50 40, 70 40 L 130 40 Q 150 40, 150 60 L 150 110 Q 150 130, 130 130 L 85 130 L 60 155 L 65 130 Q 50 130, 50 110 Z" fill="white"/>
+                        <ellipse cx="100" cy="85" rx="28" ry="22" fill="#0073E6"/>
+                        <ellipse cx="100" cy="85" rx="18" ry="14" fill="white"/>
+                        <ellipse cx="100" cy="85" rx="8" ry="6" fill="#0073E6"/>
+                        <path d="M 85 95 L 95 105 L 115 80" stroke="#52C41A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                </div>
+                <div class="logo-info">
+                    <p><strong>设计元素：</strong>对话气泡 + 监控眼 + 对勾</p>
+                    <p><strong>适用场景：</strong>企业微信应用图标、Web界面</p>
+                    <p><strong>设计寓意：</strong>蓝色代表专业信任，眼睛代表监控，对勾代表消息已回复</p>
+                    <div class="color-palette">
+                        <div class="color-item">
+                            <div class="color-dot" style="background: #0073E6;"></div>
+                            <span class="color-code">#0073E6</span>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-dot" style="background: #52C41A;"></div>
+                            <span class="color-code">#52C41A</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 方案二 -->
+            <div class="logo-card">
+                <h3>方案二：双气泡监控 <span class="badge secondary">备选</span></h3>
+                <div class="logo-preview">
+                    <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="bgGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0073E6"/>
+                                <stop offset="100%" style="stop-color:#00B4D8"/>
+                            </linearGradient>
+                        </defs>
+                        <rect width="200" height="200" rx="40" fill="url(#bgGradient2)"/>
+                        <path d="M 35 70 Q 35 55, 50 55 L 90 55 Q 105 55, 105 70 L 105 100 Q 105 115, 90 115 L 55 115 L 40 130 L 42 115 Q 35 115, 35 100 Z" fill="white" opacity="0.95"/>
+                        <path d="M 95 85 Q 95 70, 110 70 L 150 70 Q 165 70, 165 85 L 165 115 Q 165 130, 150 130 L 120 130 L 105 145 L 107 130 Q 95 130, 95 115 Z" fill="white" opacity="0.95"/>
+                        <circle cx="100" cy="92" r="45" stroke="white" stroke-width="3" fill="none" opacity="0.3"/>
+                        <circle cx="100" cy="92" r="35" stroke="white" stroke-width="2" fill="none" opacity="0.5"/>
+                        <circle cx="100" cy="92" r="8" fill="#FF4D4F"/>
+                        <circle cx="100" cy="92" r="4" fill="white"/>
+                    </svg>
+                </div>
+                <div class="logo-info">
+                    <p><strong>设计元素：</strong>双对话气泡 + 监控波纹 + 告警点</p>
+                    <p><strong>适用场景：</strong>科技感强的展示、演示文稿</p>
+                    <p><strong>设计寓意：</strong>双气泡代表消息对话，波纹代表监控扫描，红点代表告警</p>
+                    <div class="color-palette">
+                        <div class="color-item">
+                            <div class="color-dot" style="background: linear-gradient(135deg, #0073E6, #00B4D8);"></div>
+                            <span class="color-code">渐变蓝青</span>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-dot" style="background: #FF4D4F;"></div>
+                            <span class="color-code">#FF4D4F</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 方案三 -->
+            <div class="logo-card">
+                <h3>方案三：简洁线条版 <span class="badge third">简约</span></h3>
+                <div class="logo-preview">
+                    <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="200" height="200" rx="36" fill="#0073E6"/>
+                        <path d="M 55 60 Q 55 45, 70 45 L 130 45 Q 145 45, 145 60 L 145 105 Q 145 120, 130 120 L 90 120 L 70 140 L 72 120 Q 55 120, 55 105 Z" stroke="white" stroke-width="8" fill="none" stroke-linejoin="round"/>
+                        <line x1="75" y1="70" x2="125" y2="70" stroke="white" stroke-width="6" stroke-linecap="round"/>
+                        <line x1="75" y1="85" x2="115" y2="85" stroke="white" stroke-width="6" stroke-linecap="round"/>
+                        <line x1="75" y1="100" x2="105" y2="100" stroke="white" stroke-width="6" stroke-linecap="round"/>
+                        <circle cx="135" cy="55" r="12" fill="#FF4D4F"/>
+                        <text x="135" y="60" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="Arial">!</text>
+                    </svg>
+                </div>
+                <div class="logo-info">
+                    <p><strong>设计元素：</strong>线条气泡 + 消息线 + 告警标记</p>
+                    <p><strong>适用场景：</strong>小尺寸图标、移动端、简洁风格</p>
+                    <p><strong>设计寓意：</strong>简洁线条代表现代感，感叹号突出监控告警功能</p>
+                    <div class="color-palette">
+                        <div class="color-item">
+                            <div class="color-dot" style="background: #0073E6;"></div>
+                            <span class="color-code">#0073E6</span>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-dot" style="background: #FF4D4F;"></div>
+                            <span class="color-code">#FF4D4F</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 尺寸展示 -->
+        <div class="size-demo">
+            <h3>📐 不同尺寸效果展示（方案一）</h3>
+            <div class="size-grid">
+                <div class="size-item">
+                    <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="mainGradient200" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0073E6"/>
+                                <stop offset="100%" style="stop-color:#0052A3"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="100" cy="100" r="90" fill="url(#mainGradient200)"/>
+                        <path d="M 50 60 Q 50 40, 70 40 L 130 40 Q 150 40, 150 60 L 150 110 Q 150 130, 130 130 L 85 130 L 60 155 L 65 130 Q 50 130, 50 110 Z" fill="white"/>
+                        <ellipse cx="100" cy="85" rx="28" ry="22" fill="#0073E6"/>
+                        <ellipse cx="100" cy="85" rx="18" ry="14" fill="white"/>
+                        <ellipse cx="100" cy="85" rx="8" ry="6" fill="#0073E6"/>
+                        <path d="M 85 95 L 95 105 L 115 80" stroke="#52C41A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                    <div class="label">200×200px<br>应用图标</div>
+                </div>
+                <div class="size-item">
+                    <svg width="100" height="100" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="mainGradient100" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0073E6"/>
+                                <stop offset="100%" style="stop-color:#0052A3"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="100" cy="100" r="90" fill="url(#mainGradient100)"/>
+                        <path d="M 50 60 Q 50 40, 70 40 L 130 40 Q 150 40, 150 60 L 150 110 Q 150 130, 130 130 L 85 130 L 60 155 L 65 130 Q 50 130, 50 110 Z" fill="white"/>
+                        <ellipse cx="100" cy="85" rx="28" ry="22" fill="#0073E6"/>
+                        <ellipse cx="100" cy="85" rx="18" ry="14" fill="white"/>
+                        <ellipse cx="100" cy="85" rx="8" ry="6" fill="#0073E6"/>
+                        <path d="M 85 95 L 95 105 L 115 80" stroke="#52C41A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                    <div class="label">100×100px<br>缩略图</div>
+                </div>
+                <div class="size-item">
+                    <svg width="64" height="64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="mainGradient64" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0073E6"/>
+                                <stop offset="100%" style="stop-color:#0052A3"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="100" cy="100" r="90" fill="url(#mainGradient64)"/>
+                        <path d="M 50 60 Q 50 40, 70 40 L 130 40 Q 150 40, 150 60 L 150 110 Q 150 130, 130 130 L 85 130 L 60 155 L 65 130 Q 50 130, 50 110 Z" fill="white"/>
+                        <ellipse cx="100" cy="85" rx="28" ry="22" fill="#0073E6"/>
+                        <ellipse cx="100" cy="85" rx="18" ry="14" fill="white"/>
+                        <ellipse cx="100" cy="85" rx="8" ry="6" fill="#0073E6"/>
+                        <path d="M 85 95 L 95 105 L 115 80" stroke="#52C41A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                    <div class="label">64×64px<br>列表图标</div>
+                </div>
+                <div class="size-item">
+                    <svg width="32" height="32" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="mainGradient32" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0073E6"/>
+                                <stop offset="100%" style="stop-color:#0052A3"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="100" cy="100" r="90" fill="url(#mainGradient32)"/>
+                        <path d="M 50 60 Q 50 40, 70 40 L 130 40 Q 150 40, 150 60 L 150 110 Q 150 130, 130 130 L 85 130 L 60 155 L 65 130 Q 50 130, 50 110 Z" fill="white"/>
+                        <ellipse cx="100" cy="85" rx="28" ry="22" fill="#0073E6"/>
+                        <ellipse cx="100" cy="85" rx="18" ry="14" fill="white"/>
+                        <ellipse cx="100" cy="85" rx="8" ry="6" fill="#0073E6"/>
+                        <path d="M 85 95 L 95 105 L 115 80" stroke="#52C41A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                    <div class="label">32×32px<br>小图标</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 使用指南 -->
+        <div class="usage-guide">
+            <h3>📖 使用指南</h3>
+            <div class="usage-grid">
+                <div class="usage-item">
+                    <h4>企业微信应用图标</h4>
+                    <p>推荐使用方案一，尺寸200×200px，格式PNG。在企业微信管理后台「应用管理」→「应用详情」→「应用图标」处上传。</p>
+                </div>
+                <div class="usage-item">
+                    <h4>Web界面Logo</h4>
+                    <p>使用SVG格式，可自适应缩放。顶部导航建议40px高度，登录页面建议80px高度。</p>
+                </div>
+                <div class="usage-item">
+                    <h4>文档和演示</h4>
+                    <p>使用带文字的组合Logo，图标+「消息监控助手」文字，保持品牌一致性。</p>
+                </div>
+                <div class="usage-item">
+                    <h4>导出方法</h4>
+                    <p>浏览器打开此页面，右键点击SVG图标选择「另存为图片」，或使用Illustrator打开SVG文件导出PNG。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

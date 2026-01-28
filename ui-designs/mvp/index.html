@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>监控仪表盘 - 企业微信消息监控助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            500: '#0073e6',
+                            600: '#005bb3',
+                        },
+                        success: {
+                            500: '#52c41a',
+                            600: '#389e0d',
+                        },
+                        warning: {
+                            500: '#faad14',
+                            600: '#d48806',
+                        },
+                        danger: {
+                            500: '#ff4d4f',
+                            600: '#cf1322',
+                        },
+                        neutral: {
+                            100: '#f0f0f0',
+                            200: '#d9d9d9',
+                            300: '#bfbfbf',
+                            400: '#8c8c8c',
+                            500: '#595959',
+                            600: '#262626',
+                            700: '#141414',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        .sidebar-item {
+            position: relative;
+        }
+        
+        .sidebar-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 24px;
+            background: #0073e6;
+            border-radius: 0 3px 3px 0;
+        }
+        
+        .sidebar-item.active {
+            background: linear-gradient(90deg, #e6f3ff 0%, transparent 100%);
+        }
+        
+        .stat-card {
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .message-item {
+            transition: background-color 0.15s ease;
+        }
+        
+        .message-item:hover {
+            background-color: #f8fafc;
+        }
+        
+        @keyframes pulse-dot {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        .live-indicator {
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        
+        @keyframes slide-in {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .new-message {
+            animation: slide-in 0.3s ease-out;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+    </style>
+</head>
+<body class="bg-neutral-100 min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- 左侧边栏 -->
+        <aside class="w-64 bg-white border-r border-neutral-200 flex flex-col">
+            <!-- Logo区域 -->
+            <div class="px-6 py-5 border-b border-neutral-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <h1 class="font-semibold text-neutral-800 text-base truncate">消息监控助手</h1>
+                        <p class="text-xs text-neutral-400">企业微信版</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 导航菜单 -->
+            <nav class="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin">
+                <div class="space-y-1">
+                    <a href="#" class="sidebar-item active flex items-center gap-3 px-4 py-2.5 rounded-lg text-primary-600 font-medium">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                        <span class="text-sm">监控仪表盘</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span class="text-sm">群聊管理</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span class="text-sm">告警配置</span>
+                    </a>
+                    
+                    <a href="#" class="sidebar-item flex items-center gap-3 px-4 py-2.5 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="text-sm">数据报表</span>
+                    </a>
+                </div>
+                
+                <div class="mt-8 pt-4 border-t border-neutral-200">
+                    <p class="px-4 mb-2 text-xs font-medium text-neutral-400 uppercase tracking-wider">快捷操作</p>
+                    <div class="space-y-1">
+                        <button class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors text-left">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            <span class="text-sm">添加监控群聊</span>
+                        </button>
+                        
+                        <button class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors text-left">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <span class="text-sm">刷新数据</span>
+                        </button>
+                        
+                        <button class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors text-left">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span class="text-sm">系统设置</span>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- 用户信息 -->
+            <div class="px-4 py-4 border-t border-neutral-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-neutral-700 truncate">张主管</p>
+                        <p class="text-xs text-neutral-400 truncate">客服团队</p>
+                    </div>
+                    <button class="text-neutral-400 hover:text-neutral-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <!-- 顶部工具栏 -->
+            <header class="bg-white border-b border-neutral-200 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-neutral-800">监控仪表盘</h1>
+                        <p class="text-sm text-neutral-500 mt-1">实时监控群聊消息状态，快速响应未回复消息</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <!-- 实时状态指示 -->
+                        <div class="flex items-center gap-2 px-3 py-1.5 bg-success-50 rounded-full">
+                            <span class="w-2 h-2 bg-success-500 rounded-full live-indicator"></span>
+                            <span class="text-xs font-medium text-success-600">实时监控中</span>
+                        </div>
+                        
+                        <!-- 最后更新时间 -->
+                        <span class="text-sm text-neutral-400">最后更新: 10:32:45</span>
+                        
+                        <!-- 刷新按钮 -->
+                        <button class="p-2 text-neutral-500 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors" title="刷新数据">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- 添加按钮 -->
+                        <button class="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            添加群聊
+                        </button>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- 仪表盘内容 -->
+            <div class="flex-1 overflow-y-auto p-6 scrollbar-thin">
+                <!-- 统计卡片区域 -->
+                <section class="mb-6">
+                    <div class="grid grid-cols-4 gap-6">
+                        <!-- 监控群聊数 -->
+                        <div class="stat-card bg-white rounded-xl p-6 border border-neutral-200 shadow-sm">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-500">监控群聊数</p>
+                                    <p class="text-3xl font-bold text-neutral-800 mt-2">12</p>
+                                    <div class="flex items-center gap-1 mt-2">
+                                        <span class="text-xs text-success-600 font-medium">+2</span>
+                                        <span class="text-xs text-neutral-400">本周新增</span>
+                                    </div>
+                                </div>
+                                <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 今日消息总数 -->
+                        <div class="stat-card bg-white rounded-xl p-6 border border-neutral-200 shadow-sm">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-500">今日消息总数</p>
+                                    <p class="text-3xl font-bold text-neutral-800 mt-2">1,286</p>
+                                    <div class="flex items-center gap-1 mt-2">
+                                        <span class="text-xs text-success-600 font-medium">+12.5%</span>
+                                        <span class="text-xs text-neutral-400">较昨日</span>
+                                    </div>
+                                </div>
+                                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 未回复消息 -->
+                        <div class="stat-card bg-white rounded-xl p-6 border border-neutral-200 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 bg-danger-50 rounded-full -mr-12 -mt-12"></div>
+                            <div class="flex items-start justify-between relative">
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-500">未回复消息</p>
+                                    <p class="text-3xl font-bold text-danger-500 mt-2">3</p>
+                                    <div class="flex items-center gap-1 mt-2">
+                                        <span class="text-xs text-danger-600 font-medium">需立即处理</span>
+                                    </div>
+                                </div>
+                                <div class="w-12 h-12 bg-danger-100 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 平均响应时间 -->
+                        <div class="stat-card bg-white rounded-xl p-6 border border-neutral-200 shadow-sm">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-neutral-500">平均响应时间</p>
+                                    <p class="text-3xl font-bold text-neutral-800 mt-2">5.2<span class="text-lg ml-1">分钟</span></p>
+                                    <div class="flex items-center gap-1 mt-2">
+                                        <span class="text-xs text-success-600 font-medium">-18%</span>
+                                        <span class="text-xs text-neutral-400">较上周</span>
+                                    </div>
+                                </div>
+                                <div class="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 主体内容区域 -->
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- 群聊状态列表 (占2列) -->
+                    <section class="col-span-2">
+                        <div class="bg-white rounded-xl border border-neutral-200 shadow-sm">
+                            <!-- 头部 -->
+                            <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
+                                <div class="flex items-center gap-4">
+                                    <h2 class="text-lg font-semibold text-neutral-800">群聊状态概览</h2>
+                                    <div class="flex items-center gap-2">
+                                        <span class="flex items-center gap-1 px-2 py-0.5 bg-success-50 rounded-full">
+                                            <span class="w-1.5 h-1.5 bg-success-500 rounded-full"></span>
+                                            <span class="text-xs text-success-600">正常 8</span>
+                                        </span>
+                                        <span class="flex items-center gap-1 px-2 py-0.5 bg-warning-50 rounded-full">
+                                            <span class="w-1.5 h-1.5 bg-warning-500 rounded-full"></span>
+                                            <span class="text-xs text-warning-600">警告 1</span>
+                                        </span>
+                                        <span class="flex items-center gap-1 px-2 py-0.5 bg-danger-50 rounded-full">
+                                            <span class="w-1.5 h-1.5 bg-danger-500 rounded-full"></span>
+                                            <span class="text-xs text-danger-600">异常 3</span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <!-- 搜索 -->
+                                    <div class="relative">
+                                        <svg class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                        <input type="text" placeholder="搜索群聊..." class="pl-9 pr-4 py-2 w-56 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                    </div>
+                                    
+                                    <!-- 筛选 -->
+                                    <select class="px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                        <option>全部状态</option>
+                                        <option>正常</option>
+                                        <option>警告</option>
+                                        <option>异常</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- 表格 -->
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-neutral-50 border-b border-neutral-200">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">群聊名称</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">今日消息</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">未回复</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">平均响应</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">最后活跃</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">状态</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-neutral-100">
+                                        <!-- 异常行 -->
+                                        <tr class="hover:bg-neutral-50 transition-colors bg-danger-50/30">
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-neutral-800">客户服务A群</p>
+                                                        <p class="text-xs text-neutral-400">ID: chat_001</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-neutral-600">286</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger-100 text-danger-600">
+                                                    3条超时
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-danger-600 font-medium">15.2分钟</td>
+                                            <td class="px-6 py-4 text-sm text-neutral-500">10:28</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger-50 text-danger-600">
+                                                    <span class="w-1.5 h-1.5 bg-danger-500 rounded-full mr-1"></span>
+                                                    异常
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <button class="text-primary-500 text-sm hover:text-primary-600 font-medium">查看详情</button>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- 异常行 -->
+                                        <tr class="hover:bg-neutral-50 transition-colors bg-danger-50/30">
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-neutral-800">技术支持B群</p>
+                                                        <p class="text-xs text-neutral-400">ID: chat_002</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-neutral-600">152</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger-100 text-danger-600">
+                                                    2条超时
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-danger-600 font-medium">22.5分钟</td>
+                                            <td class="px-6 py-4 text-sm text-neutral-500">10:15</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger-50 text-danger-600">
+                                                    <span class="w-1.5 h-1.5 bg-danger-500 rounded-full mr-1"></span>
+                                                    异常
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <button class="text-primary-500 text-sm hover:text-primary-600 font-medium">查看详情</button>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- 警告行 -->
+                                        <tr class="hover:bg-neutral-50 transition-colors bg-warning-50/30">
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-neutral-800">产品咨询C群</p>
+                                                        <p class="text-xs text-neutral-400">ID: chat_003</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-neutral-600">98</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-600">
+                                                    1条待处理
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-warning-600 font-medium">12.3分钟</td>
+                                            <td class="px-6 py-4 text-sm text-neutral-500">10:22</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-50 text-warning-600">
+                                                    <span class="w-1.5 h-1.5 bg-warning-500 rounded-full mr-1"></span>
+                                                    警告
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <button class="text-primary-500 text-sm hover:text-primary-600 font-medium">查看详情</button>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- 正常行 -->
+                                        <tr class="hover:bg-neutral-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-neutral-800">售后服务D群</p>
+                                                        <p class="text-xs text-neutral-400">ID: chat_004</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-neutral-600">76</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-600">
+                                                    0条超时
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-neutral-600">3.1分钟</td>
+                                            <td class="px-6 py-4 text-sm text-neutral-500">10:31</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-600">
+                                                    <span class="w-1.5 h-1.5 bg-success-500 rounded-full mr-1"></span>
+                                                    正常
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <button class="text-primary-500 text-sm hover:text-primary-600 font-medium">查看详情</button>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- 正常行 -->
+                                        <tr class="hover:bg-neutral-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-neutral-800">商务合作E群</p>
+                                                        <p class="text-xs text-neutral-400">ID: chat_005</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-neutral-600">45</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-600">
+                                                    0条超时
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-neutral-600">2.8分钟</td>
+                                            <td class="px-6 py-4 text-sm text-neutral-500">09:45</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-600">
+                                                    <span class="w-1.5 h-1.5 bg-success-500 rounded-full mr-1"></span>
+                                                    正常
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <button class="text-primary-500 text-sm hover:text-primary-600 font-medium">查看详情</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- 分页 -->
+                            <div class="flex items-center justify-between px-6 py-4 border-t border-neutral-200">
+                                <p class="text-sm text-neutral-500">共 12 个群聊</p>
+                                <div class="flex items-center gap-2">
+                                    <button class="px-3 py-1 border border-neutral-200 rounded text-sm text-neutral-600 hover:bg-neutral-50 disabled:opacity-50" disabled>上一页</button>
+                                    <button class="px-3 py-1 bg-primary-500 text-white rounded text-sm">1</button>
+                                    <button class="px-3 py-1 border border-neutral-200 rounded text-sm text-neutral-600 hover:bg-neutral-50">2</button>
+                                    <button class="px-3 py-1 border border-neutral-200 rounded text-sm text-neutral-600 hover:bg-neutral-50">下一页</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- 未回复消息告警区 (占1列) -->
+                    <section>
+                        <div class="bg-white rounded-xl border border-neutral-200 shadow-sm h-full">
+                            <!-- 头部 -->
+                            <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-200">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                    <h2 class="text-lg font-semibold text-neutral-800">未回复告警</h2>
+                                </div>
+                                <span class="flex items-center justify-center w-6 h-6 bg-danger-500 text-white text-xs font-bold rounded-full">3</span>
+                            </div>
+                            
+                            <!-- 告警列表 -->
+                            <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto scrollbar-thin">
+                                <!-- 紧急告警 -->
+                                <div class="p-4 bg-danger-50 border border-danger-200 rounded-xl new-message">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-0.5 bg-danger-500 text-white text-xs font-medium rounded">紧急</span>
+                                            <span class="text-xs text-danger-600">超时 35分钟</span>
+                                        </div>
+                                        <span class="text-xs text-neutral-400">10:28</span>
+                                    </div>
+                                    <p class="text-sm font-medium text-neutral-800 mb-2">客户服务A群</p>
+                                    <p class="text-sm text-neutral-600 mb-3 line-clamp-2">"请问你们的产品什么时候能发货？我上周就已经下单了，现在还没有收到任何通知..."</p>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center">
+                                                <span class="text-xs font-medium text-primary-600">李</span>
+                                            </div>
+                                            <span class="text-xs text-neutral-500">责任人: 李客服</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button class="p-1.5 text-primary-500 hover:bg-primary-50 rounded transition-colors" title="立即提醒">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                                </svg>
+                                            </button>
+                                            <button class="p-1.5 text-neutral-400 hover:text-primary-500 hover:bg-primary-50 rounded transition-colors" title="查看详情">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 紧急告警 -->
+                                <div class="p-4 bg-danger-50 border border-danger-200 rounded-xl">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-0.5 bg-danger-500 text-white text-xs font-medium rounded">紧急</span>
+                                            <span class="text-xs text-danger-600">超时 28分钟</span>
+                                        </div>
+                                        <span class="text-xs text-neutral-400">10:15</span>
+                                    </div>
+                                    <p class="text-sm font-medium text-neutral-800 mb-2">技术支持B群</p>
+                                    <p class="text-sm text-neutral-600 mb-3 line-clamp-2">"系统报错：无法连接到数据库，请技术支持人员尽快回复！"</p>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-success-100 rounded-full flex items-center justify-center">
+                                                <span class="text-xs font-medium text-success-600">王</span>
+                                            </div>
+                                            <span class="text-xs text-neutral-500">责任人: 王技术</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button class="p-1.5 text-primary-500 hover:bg-primary-50 rounded transition-colors" title="立即提醒">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                                </svg>
+                                            </button>
+                                            <button class="p-1.5 text-neutral-400 hover:text-primary-500 hover:bg-primary-50 rounded transition-colors" title="查看详情">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 警告告警 -->
+                                <div class="p-4 bg-warning-50 border border-warning-200 rounded-xl">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-0.5 bg-warning-500 text-white text-xs font-medium rounded">警告</span>
+                                            <span class="text-xs text-warning-600">超时 18分钟</span>
+                                        </div>
+                                        <span class="text-xs text-neutral-400">10:22</span>
+                                    </div>
+                                    <p class="text-sm font-medium text-neutral-800 mb-2">产品咨询C群</p>
+                                    <p class="text-sm text-neutral-600 mb-3 line-clamp-2">"你们的会员权益有哪些？能否详细介绍一下"</p>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-warning-100 rounded-full flex items-center justify-center">
+                                                <span class="text-xs font-medium text-warning-600">赵</span>
+                                            </div>
+                                            <span class="text-xs text-neutral-500">责任人: 赵客服</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button class="p-1.5 text-primary-500 hover:bg-primary-50 rounded transition-colors" title="立即提醒">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                                </svg>
+                                            </button>
+                                            <button class="p-1.5 text-neutral-400 hover:text-primary-500 hover:bg-primary-50 rounded transition-colors" title="查看详情">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 底部操作 -->
+                            <div class="p-4 border-t border-neutral-200 bg-neutral-50 rounded-b-xl">
+                                <button class="w-full py-2.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors">
+                                    一键提醒所有未回复
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                
+                <!-- 实时消息流区域 -->
+                <section class="mt-6">
+                    <div class="bg-white rounded-xl border border-neutral-200 shadow-sm">
+                        <!-- 头部 -->
+                        <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
+                            <div class="flex items-center gap-3">
+                                <h2 class="text-lg font-semibold text-neutral-800">实时消息流</h2>
+                                <div class="flex items-center gap-2 px-2 py-1 bg-success-50 rounded-full">
+                                    <span class="w-2 h-2 bg-success-500 rounded-full live-indicator"></span>
+                                    <span class="text-xs font-medium text-success-600">LIVE</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <select class="px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                    <option>全部群聊</option>
+                                    <option>客户服务A群</option>
+                                    <option>技术支持B群</option>
+                                    <option>产品咨询C群</option>
+                                </select>
+                                <button class="text-sm text-primary-500 hover:text-primary-600 font-medium">暂停接收</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 消息列表 -->
+                        <div class="p-4 max-h-80 overflow-y-auto scrollbar-thin">
+                            <div class="space-y-3">
+                                <!-- 新消息 -->
+                                <div class="message-item flex items-start gap-4 p-3 rounded-lg new-message">
+                                    <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-xs font-medium text-primary-600">客</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-sm font-medium text-neutral-800">客户A</span>
+                                            <span class="px-2 py-0.5 bg-primary-100 text-primary-600 text-xs rounded">客户</span>
+                                            <span class="text-xs text-neutral-400">在 客户服务A群</span>
+                                        </div>
+                                        <p class="text-sm text-neutral-600">请问你们这个产品有现货吗？急用！</p>
+                                        <p class="text-xs text-neutral-400 mt-1">10:32:45</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- 客服回复 -->
+                                <div class="message-item flex items-start gap-4 p-3 rounded-lg">
+                                    <div class="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-xs font-medium text-success-600">李</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-sm font-medium text-neutral-800">李客服</span>
+                                            <span class="px-2 py-0.5 bg-success-100 text-success-600 text-xs rounded">客服</span>
+                                            <span class="text-xs text-neutral-400">在 客户服务A群</span>
+                                        </div>
+                                        <p class="text-sm text-neutral-600">您好！有的，我们今天下单今天就可以发货。</p>
+                                        <p class="text-xs text-neutral-400 mt-1">10:32:20</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- 消息 -->
+                                <div class="message-item flex items-start gap-4 p-3 rounded-lg">
+                                    <div class="w-8 h-8 bg-warning-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-xs font-medium text-warning-600">技</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-sm font-medium text-neutral-800">技术支持小王</span>
+                                            <span class="px-2 py-0.5 bg-warning-100 text-warning-600 text-xs rounded">客服</span>
+                                            <span class="text-xs text-neutral-400">在 技术支持B群</span>
+                                        </div>
+                                        <p class="text-sm text-neutral-600">已为您排查，数据库连接问题已修复，请重新尝试操作。</p>
+                                        <p class="text-xs text-neutral-400 mt-1">10:31:55</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- 消息 -->
+                                <div class="message-item flex items-start gap-4 p-3 rounded-lg">
+                                    <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-xs font-medium text-primary-600">用</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-sm font-medium text-neutral-800">企业用户B</span>
+                                            <span class="px-2 py-0.5 bg-primary-100 text-primary-600 text-xs rounded">客户</span>
+                                            <span class="text-xs text-neutral-400">在 商务合作E群</span>
+                                        </div>
+                                        <p class="text-sm text-neutral-600">好的，我先把合同发给您看看</p>
+                                        <p class="text-xs text-neutral-400 mt-1">10:30:12</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- 系统消息 -->
+                                <div class="message-item flex items-start gap-4 p-3 rounded-lg">
+                                    <div class="w-8 h-8 bg-neutral-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-sm font-medium text-neutral-800">系统通知</span>
+                                            <span class="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-xs rounded">系统</span>
+                                        </div>
+                                        <p class="text-sm text-neutral-600">群聊「产品咨询C群」有新成员加入：运营小张</p>
+                                        <p class="text-xs text-neutral-400 mt-1">10:28:30</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

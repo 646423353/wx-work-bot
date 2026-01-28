@@ -1,0 +1,22 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0073E6"/>
+      <stop offset="100%" style="stop-color:#0052A3"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景圆形 -->
+  <circle cx="100" cy="100" r="90" fill="url(#mainGradient)"/>
+  
+  <!-- 对话气泡主体 -->
+  <path d="M 50 60 Q 50 40, 70 40 L 130 40 Q 150 40, 150 60 L 150 110 Q 150 130, 130 130 L 85 130 L 60 155 L 65 130 Q 50 130, 50 110 Z" fill="white"/>
+  
+  <!-- 监控眼 -->
+  <ellipse cx="100" cy="85" rx="28" ry="22" fill="#0073E6"/>
+  <ellipse cx="100" cy="85" rx="18" ry="14" fill="white"/>
+  <ellipse cx="100" cy="85" rx="8" ry="6" fill="#0073E6"/>
+  
+  <!-- 对勾 -->
+  <path d="M 85 95 L 95 105 L 115 80" stroke="#52C41A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
