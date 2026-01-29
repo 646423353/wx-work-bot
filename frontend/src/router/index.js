@@ -57,23 +57,12 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth !== false)
-  
-  console.log('路由守卫执行:', {
-    to: to.path,
-    from: from.path,
-    requiresAuth,
-    isLoggedIn: userStore.isLoggedIn,
-    token: userStore.token
-  })
 
   if (requiresAuth && !userStore.isLoggedIn) {
-    console.log('需要登录但未登录，跳转到登录页')
     next('/login')
   } else if (to.path === '/login' && userStore.isLoggedIn) {
-    console.log('已登录但访问登录页，跳转到仪表盘')
     next('/dashboard')
   } else {
-    console.log('路由守卫通过')
     next()
   }
 })

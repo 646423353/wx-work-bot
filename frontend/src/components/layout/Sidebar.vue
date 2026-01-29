@@ -161,7 +161,7 @@ async function handleLogout() {
     await userStore.logout()
     router.push('/login')
   } catch (error) {
-    console.log('取消退出登录')
+    // 取消退出登录
   }
 }
 </script>

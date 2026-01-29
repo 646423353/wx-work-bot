@@ -150,6 +150,8 @@ async function handleDeleteWord(word) {
       type: 'warning'
     })
     await alertStore.removeSensitiveWord(word.id)
+    // 删除成功后刷新敏感词列表
+    await fetchSensitiveWords()
     ElMessage.success('删除成功')
   } catch (error) {
     if (error !== 'cancel') {

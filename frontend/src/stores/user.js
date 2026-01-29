@@ -19,20 +19,13 @@ export const useUserStore = defineStore('user', () => {
 
   async function login(credentials) {
     try {
-      console.log('User store login called with:', credentials)
       const res = await loginApi(credentials)
-      console.log('Login API response:', res)
       
       setToken(res.data.token)
       setUserInfo(res.data.user)
       
-      console.log('Token set:', token.value)
-      console.log('User info set:', userInfo.value)
-      console.log('Is logged in:', isLoggedIn.value)
-      
       return Promise.resolve(res)
     } catch (error) {
-      console.error('User store login error:', error)
       return Promise.reject(error)
     }
   }

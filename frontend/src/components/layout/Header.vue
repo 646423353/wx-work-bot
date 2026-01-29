@@ -22,15 +22,6 @@
             <Refresh />
           </el-icon>
         </button>
-
-        <el-button
-          v-if="showAddButton"
-          type="primary"
-          :icon="Plus"
-          @click="handleAdd"
-        >
-          添加群聊
-        </el-button>
       </div>
     </div>
   </header>
@@ -38,7 +29,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { Refresh, Plus } from '@element-plus/icons-vue'
+import { Refresh } from '@element-plus/icons-vue'
 
 const props = defineProps({
   title: {
@@ -48,14 +39,10 @@ const props = defineProps({
   description: {
     type: String,
     default: '实时监控群聊消息状态，快速响应未回复消息'
-  },
-  showAddButton: {
-    type: Boolean,
-    default: true
   }
 })
 
-const emit = defineEmits(['refresh', 'add'])
+const emit = defineEmits(['refresh'])
 
 const lastUpdated = ref('')
 let timer = null
@@ -67,10 +54,6 @@ function updateTime() {
 
 function handleRefresh() {
   emit('refresh')
-}
-
-function handleAdd() {
-  emit('add')
 }
 
 onMounted(() => {

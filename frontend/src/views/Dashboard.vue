@@ -1,7 +1,5 @@
 <template>
   <div class="dashboard-page">
-    <h1>测试标题</h1>
-    <p>测试内容</p>
     <section class="mb-6">
       <div class="grid grid-cols-4 gap-6">
         <div class="stat-card bg-white rounded-xl p-6 border border-neutral-200 shadow-sm">
@@ -84,18 +82,18 @@
           <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
             <div class="flex items-center gap-4">
               <h2 class="text-lg font-semibold text-neutral-800">群聊状态概览</h2>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2" v-if="groups.length > 0">
                 <span class="flex items-center gap-1 px-2 py-0.5 bg-success-50 rounded-full">
                   <span class="w-1.5 h-1.5 bg-success-500 rounded-full"></span>
-                  <span class="text-xs text-success-600">正常 8</span>
+                  <span class="text-xs text-success-600">正常 {{ groups.filter(g => g.status === 'normal').length }}</span>
                 </span>
                 <span class="flex items-center gap-1 px-2 py-0.5 bg-warning-50 rounded-full">
                   <span class="w-1.5 h-1.5 bg-warning-500 rounded-full"></span>
-                  <span class="text-xs text-warning-600">警告 1</span>
+                  <span class="text-xs text-warning-600">警告 {{ groups.filter(g => g.status === 'warning').length }}</span>
                 </span>
                 <span class="flex items-center gap-1 px-2 py-0.5 bg-danger-50 rounded-full">
                   <span class="w-1.5 h-1.5 bg-danger-500 rounded-full"></span>
-                  <span class="text-xs text-danger-600">异常 3</span>
+                  <span class="text-xs text-danger-600">异常 {{ groups.filter(g => g.status === 'abnormal').length }}</span>
                 </span>
               </div>
             </div>
@@ -133,7 +131,18 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-neutral-100">
-                <tr v-for="group in filteredGroups" :key="group.id" :class="{
+                <tr v-if="filteredGroups.length === 0">
+                  <td colspan="7" class="px-6 py-12 text-center">
+                    <div class="flex flex-col items-center justify-center text-neutral-400">
+                      <el-icon :size="48" class="mb-3 opacity-50">
+                        <ChatLineRound />
+                      </el-icon>
+                      <p class="text-sm">暂无群聊数据</p>
+                      <p class="text-xs mt-1">请先在群聊管理中添加监控群聊</p>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-for="group in filteredGroups" :key="group.id" v-else :class="{
                   'bg-danger-50/30': group.status === 'abnormal',
                   'bg-warning-50/30': group.status === 'warning',
                   'hover:bg-neutral-50': true
@@ -340,7 +349,6 @@ async function fetchData() {
       messages.value = monitoringStore.messages
     }
   } catch (error) {
-    console.error('获取数据失败:', error)
     ElMessage.error('获取数据失败')
   } finally {
     loading.value = false

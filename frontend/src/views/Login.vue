@@ -79,9 +79,7 @@
             </el-button>
           </el-form-item>
         </el-form>
-        <div class="login-footer">
-          <p class="footer-text">默认账号: admin / admin123</p>
-        </div>
+
       </div>
     </div>
   </div>
@@ -118,34 +116,24 @@ async function handleLogin() {
   if (!formRef.value) return
 
   try {
-    console.log('开始登录流程')
     const valid = await formRef.value.validate()
-    console.log('表单验证结果:', valid)
     
     if (valid) {
       loading.value = true
-      console.log('调用 userStore.login')
       
       try {
         await userStore.login(loginForm.value)
-        console.log('登录成功，准备跳转到 /dashboard')
         ElMessage.success('登录成功')
         
-        console.log('当前路由:', router.currentRoute.value.path)
-        console.log('准备跳转...')
-        
         await router.push('/dashboard')
-        
-        console.log('跳转完成')
       } catch (error) {
-        console.error('登录错误:', error)
         ElMessage.error(error.message || '登录失败，请检查用户名和密码')
       } finally {
         loading.value = false
       }
     }
   } catch (error) {
-    console.error('表单验证错误:', error)
+    // 表单验证错误
   }
 }
 </script>

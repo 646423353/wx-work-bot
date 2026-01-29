@@ -8,10 +8,14 @@ const service = axios.create({
 
 service.interceptors.request.use(
   config => {
+    // 从 localStorage 获取 token
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`
+    }
     return config
   },
   error => {
-    console.error('Request error:', error)
     return Promise.reject(error)
   }
 )
@@ -26,8 +30,6 @@ service.interceptors.response.use(
     return res
   },
   error => {
-    console.error('Response error:', error)
-    
     if (error.response) {
       const status = error.response.status
       const message = error.response.data?.message || '请求失败'

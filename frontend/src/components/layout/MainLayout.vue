@@ -55,6 +55,6 @@ function handleRefresh() {
 }
 
 function handleAdd() {
-  console.log('Add button clicked')
+  // Add button clicked
 }
 </script>

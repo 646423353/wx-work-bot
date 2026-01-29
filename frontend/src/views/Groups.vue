@@ -107,8 +107,9 @@ const pageSize = ref(10)
 async function fetchGroups() {
   loading.value = true
   try {
-    await groupStore.fetchGroups()
-    groups.value = groupStore.groups
+    const res = await groupStore.fetchGroups()
+    // 使用解构创建新数组，确保响应式更新
+    groups.value = [...(groupStore.groups || [])]
   } catch (error) {
     ElMessage.error('获取群聊列表失败')
   } finally {
@@ -146,6 +147,8 @@ async function handleDelete(row) {
       type: 'warning'
     })
     await groupStore.removeGroup(row.id)
+    // 删除成功后立即刷新列表
+    await fetchGroups()
     ElMessage.success('删除成功')
   } catch (error) {
     if (error !== 'cancel') {
