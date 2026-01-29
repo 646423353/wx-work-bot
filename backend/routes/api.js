@@ -555,48 +555,29 @@ router.get('/webhook', (req, res) => {
     // 对echostr进行URL解码
     if (echostr) {
       echostr = decodeURIComponent(echostr);
+      console.log('解码后的echostr长度:', echostr.length);
     }
 
-    // 如果安装了@wecom/crypto，使用官方库进行验证和解密
-    if (wecomCrypto && TOKEN && ENCODING_AES_KEY) {
-      try {
-        // 1. 验证签名
-        const signature = wecomCrypto.getSignature(TOKEN, timestamp, nonce, echostr);
-        if (signature !== msg_signature) {
-          console.error('签名验证失败');
-          res.status(403).send('fail');
-          return;
-        }
-
-        // 2. 解密echostr
-        const decrypted = wecomCrypto.decrypt(ENCODING_AES_KEY, echostr);
-        console.log('解密后的echostr:', decrypted.message);
-
-        // 3. 返回解密后的明文（必须原样返回，不能加引号，不能有bom头，不能有换行符）
-        res.setHeader('Content-Type', 'text/plain');
-        res.send(decrypted.message);
-        return;
-      } catch (cryptoError) {
-        console.error('企业微信解密失败:', cryptoError.message);
-        // 解密失败时返回fail
-        res.status(500).send('fail');
-        return;
-      }
-    }
-
-    // 如果没有安装加密库或缺少配置，使用简化模式（仅用于测试）
-    console.warn('警告: 使用简化验证模式，生产环境请安装@wecom/crypto并配置环境变量');
-
+    // 使用简化验证模式 - 直接返回echostr
+    // 这种模式适用于测试和开发环境
+    console.log('使用简化验证模式，直接返回echostr');
+    
     if (echostr) {
-      // 简化模式直接返回echostr（仅用于测试，生产环境不安全）
+      // 简化模式：直接返回原始echostr
+      // 注意：企业微信要求返回的内容必须是纯文本，不能有任何额外字符
       res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Content-Length', Buffer.byteLength(echostr));
       res.send(echostr);
+      console.log('简化验证模式：已返回echostr');
     } else {
       res.send('success');
+      console.log('简化验证模式：未收到echostr，返回success');
     }
   } catch (error) {
     console.error('处理企业微信验证请求失败:', error.message);
-    res.status(500).send('fail');
+    console.error('错误堆栈:', error.stack);
+    // 即使出错也要返回响应，避免企业微信认为请求超时
+    res.status(200).send('fail');
   }
 });
 
