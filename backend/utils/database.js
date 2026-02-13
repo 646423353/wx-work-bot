@@ -74,6 +74,14 @@ function initTables() {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
+        -- 系统配置表
+        CREATE TABLE IF NOT EXISTS system_settings (
+            key TEXT UNIQUE NOT NULL,
+            value TEXT,
+            description TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
         -- 用户表
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,6 +104,33 @@ function initTables() {
             sent_at DATETIME,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (alert_id) REFERENCES alerts(alert_id)
+        );
+
+        -- 任务表 (Smart Task)
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            group_id TEXT NOT NULL,
+            creator_id TEXT NOT NULL,
+            assignee_id TEXT,
+            content TEXT NOT NULL,
+            status TEXT DEFAULT 'pending', -- pending, done
+            deadline DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            completed_at DATETIME,
+            FOREIGN KEY (group_id) REFERENCES groups(group_id)
+        );
+
+        -- 任务提醒表 (Smart Task Reminders)
+        CREATE TABLE IF NOT EXISTS reminders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id INTEGER,
+            group_id TEXT NOT NULL,
+            target_user_id TEXT,
+            remind_at DATETIME NOT NULL,
+            content TEXT,
+            status TEXT DEFAULT 'pending', -- pending, sent
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (task_id) REFERENCES tasks(id)
         );
 
         -- 创建索引
@@ -140,6 +175,82 @@ function checkAndInsertDefaultData() {
                 }
             );
         }
+    });
+
+    // 检查并自动添加 webhook_url 字段
+    db.all("PRAGMA table_info(groups)", (err, columns) => {
+        if (err) {
+            console.error('检查groups表结构失败:', err.message);
+            return;
+        }
+        
+        const hasWebhookUrl = columns.some(col => col.name === 'webhook_url');
+        if (!hasWebhookUrl) {
+            console.log('正在添加 webhook_url 字段到 groups 表...');
+            db.run("ALTER TABLE groups ADD COLUMN webhook_url TEXT", (err) => {
+                if (err) console.error('添加 webhook_url 字段失败:', err.message);
+                else console.log('webhook_url 字段添加成功');
+            });
+        }
+
+        const hasAutoRemind = columns.some(col => col.name === 'auto_remind');
+        if (!hasAutoRemind) {
+            console.log('正在添加 auto_remind 字段到 groups 表...');
+            // 默认值为 1 (开启)
+            db.run("ALTER TABLE groups ADD COLUMN auto_remind INTEGER DEFAULT 1", (err) => {
+                if (err) console.error('添加 auto_remind 字段失败:', err.message);
+                else console.log('auto_remind 字段添加成功');
+            });
+        }
+
+        const hasMemberCount = columns.some(col => col.name === 'member_count');
+        if (!hasMemberCount) {
+            console.log('正在添加 member_count 字段到 groups 表...');
+            db.run("ALTER TABLE groups ADD COLUMN member_count INTEGER DEFAULT 0", (err) => {
+                if (err) console.error('添加 member_count 字段失败:', err.message);
+                else console.log('member_count 字段添加成功');
+            });
+        }
+    });
+
+    // 检查并自动添加 priority 字段到 tasks 表
+    db.all("PRAGMA table_info(tasks)", (err, columns) => {
+        if (err) {
+            console.error('检查tasks表结构失败:', err.message);
+            return;
+        }
+        
+        const hasPriority = columns.some(col => col.name === 'priority');
+        if (!hasPriority) {
+            console.log('正在添加 priority 字段到 tasks 表...');
+            db.run("ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium'", (err) => {
+                if (err) console.error('添加 priority 字段失败:', err.message);
+                else console.log('priority 字段添加成功');
+            });
+        }
+    });
+
+    // V1.1 迁移：将存量 pending 状态迁移为 in_progress
+    db.run("UPDATE tasks SET status = 'in_progress' WHERE status = 'pending'", (err) => {
+        if (err) console.error('任务状态迁移失败:', err.message);
+        else console.log('V1.1 状态迁移完成: pending → in_progress');
+    });
+
+    // 检查并插入默认系统配置
+    const defaultSettings = [
+        { key: 'alert_enabled', value: 'true', description: '是否启用告警' },
+        { key: 'alert_timeout', value: '30', description: '告警超时时间(分钟)' },
+        { key: 'notification_types', value: '["email","wechat"]', description: '通知方式' }
+    ];
+
+    defaultSettings.forEach(setting => {
+        db.run(
+            'INSERT OR IGNORE INTO system_settings (key, value, description) VALUES (?, ?, ?)',
+            [setting.key, setting.value, setting.description],
+            (err) => {
+                if (err) console.error(`插入默认配置 ${setting.key} 失败:`, err.message);
+            }
+        );
     });
 }
 

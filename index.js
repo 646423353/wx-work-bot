@@ -1,6 +1,15 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const bodyParserXml = require('body-parser-xml');
 const cors = require('cors');
+const dotenv = require('dotenv');
+
+// 加载环境变量
+dotenv.config();
+
+// 配置XML解析器
+bodyParserXml(bodyParser);
+
 const config = require('./config/config');
 const db = require('./backend/utils/database');
 const monitorService = require('./backend/services/monitorService');
@@ -12,7 +21,14 @@ const app = express();
 // 配置中间件
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.xml({ limit: '1MB', xmlParseOptions: { normalize: true, normalizeTags: true, explicitArray: false } }));
 app.use(cors());
+
+// 统一设置响应字符集为UTF-8
+app.use((req, res, next) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    next();
+});
 
 // 静态文件服务
 // app.use(express.static('./frontend/public'));

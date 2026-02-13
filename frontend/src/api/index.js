@@ -142,3 +142,11 @@ export function updateSettings(data) {
     data
   })
 }
+
+export function replyMessage(data) {
+  return request({
+    url: '/messages/reply',
+    method: 'post',
+    data
+  })
+}

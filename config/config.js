@@ -9,11 +9,11 @@ module.exports = {
     
     // 企业微信配置
     wechat: {
-        corpId: process.env.WECHAT_CORP_ID || '',
-        appSecret: process.env.WECHAT_APP_SECRET || '',
-        agentId: process.env.WECHAT_AGENT_ID || '',
-        token: process.env.WECHAT_TOKEN || '',
-        encodingAESKey: process.env.WECHAT_ENCODING_AES_KEY || ''
+        corpId: process.env.WECHAT_CORP_ID || process.env.CORP_ID || '',
+        appSecret: process.env.WECHAT_APP_SECRET || process.env.CORP_SECRET || '',
+        agentId: process.env.WECHAT_AGENT_ID || process.env.AGENT_ID || '',
+        token: process.env.WECHAT_TOKEN || process.env.TOKEN || '',
+        encodingAESKey: process.env.WECHAT_ENCODING_AES_KEY || process.env.ENCODING_AES_KEY || ''
     },
     
     // 邮件配置
@@ -32,7 +32,8 @@ module.exports = {
     monitor: {
         checkInterval: process.env.MONITOR_CHECK_INTERVAL || 60000, // 默认1分钟检查一次
         alertInterval: process.env.MONITOR_ALERT_INTERVAL || 300000, // 默认5分钟提醒一次
-        maxMessageAge: process.env.MONITOR_MAX_MESSAGE_AGE || 86400000 // 默认1天内的消息
+        maxMessageAge: process.env.MONITOR_MAX_MESSAGE_AGE || 86400000, // 默认1天内的消息
+        internalUserIds: (process.env.INTERNAL_USER_IDS || '').split(',') // 内部人员ID列表(客服/机器人)
     },
     
     // 日志配置

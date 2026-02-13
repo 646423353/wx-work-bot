@@ -48,10 +48,8 @@
         </div>
 
         <div>
-          <h4 class="font-medium text-neutral-800 mb-4">消息趋势</h4>
-          <div class="h-64 bg-neutral-50 rounded-lg flex items-center justify-center">
-            <span class="text-neutral-400">图表区域（可集成ECharts）</span>
-          </div>
+          <h4 class="font-medium text-neutral-800 mb-4">每日任务统计</h4>
+          <div ref="chartRef" style="width: 100%; height: 400px;"></div>
         </div>
       </div>
     </div>
@@ -59,18 +57,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { getReports, exportReport } from '@/api'
 import { Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import * as echarts from 'echarts'
 
 const dateRange = ref([])
 const reportData = ref({
   totalMessages: 0,
   repliedMessages: 0,
   unrepliedMessages: 0,
-  groupStats: []
+  groupStats: [],
+  dailyTaskStats: []
 })
+
+const chartRef = ref(null)
+let chartInstance = null
 
 async function fetchReportData() {
   try {
@@ -81,9 +84,80 @@ async function fetchReportData() {
     }
     const res = await getReports(params)
     reportData.value = res.data
+    
+    // 更新图表
+    nextTick(() => {
+      initChart()
+    })
   } catch (error) {
     ElMessage.error('获取报表数据失败')
+    console.error(error)
   }
+}
+
+function initChart() {
+  if (!chartRef.value) return
+  
+  // 如果实例已存在，先销毁
+  if (chartInstance) {
+    chartInstance.dispose()
+  }
+  
+  chartInstance = echarts.init(chartRef.value)
+  
+  const stats = reportData.value.dailyTaskStats || []
+  if (stats.length === 0) {
+    chartInstance.clear()
+    return
+  }
+  
+  // 处理数据
+  // 1. 获取所有日期（排序并去重）
+  const dates = [...new Set(stats.map(item => item.date))].sort()
+  
+  // 2. 获取所有群聊名称（去重）
+  const groupNames = [...new Set(stats.map(item => item.groupName))]
+  
+  // 3. 构建 series 数据
+  const series = groupNames.map(name => {
+    return {
+      name: name,
+      type: 'bar',
+      emphasis: { focus: 'series' },
+      data: dates.map(date => {
+        const item = stats.find(s => s.date === date && s.groupName === name)
+        return item ? item.count : 0
+      })
+    }
+  })
+  
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' }
+    },
+    legend: {
+      data: groupNames,
+      bottom: 0
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '10%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: dates,
+      axisLabel: { rotate: 45 }
+    },
+    yAxis: {
+      type: 'value'
+    },
+    series: series
+  }
+  
+  chartInstance.setOption(option)
 }
 
 function handleDateChange() {
@@ -110,7 +184,19 @@ async function handleExport() {
   }
 }
 
+const handleResize = () => {
+  chartInstance && chartInstance.resize()
+}
+
 onMounted(() => {
   fetchReportData()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  if (chartInstance) {
+    chartInstance.dispose()
+  }
 })
 </script>

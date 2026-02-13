@@ -33,15 +33,7 @@
       <div class="mt-8 pt-4 border-t border-neutral-200">
         <p class="px-4 mb-2 text-xs font-medium text-neutral-400 uppercase tracking-wider">快捷操作</p>
         <div class="space-y-1">
-          <button
-            class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors text-left"
-            @click="handleAddGroup"
-          >
-            <el-icon class="flex-shrink-0" :size="20">
-              <Plus />
-            </el-icon>
-            <span class="text-sm">添加监控群聊</span>
-          </button>
+
 
           <button
             class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors text-left"
@@ -104,7 +96,8 @@ import {
   Monitor,
   ChatLineRound,
   Bell,
-  Document
+  Document,
+  List
 } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
@@ -124,9 +117,9 @@ const menuItems = [
     icon: ChatLineRound
   },
   {
-    path: '/alerts',
-    title: '告警配置',
-    icon: Bell
+    path: '/tasks',
+    title: '任务管理',
+    icon: List
   },
   {
     path: '/reports',
@@ -139,9 +132,7 @@ function isActive(path) {
   return route.path === path
 }
 
-function handleAddGroup() {
-  router.push('/groups')
-}
+
 
 function handleRefresh() {
   window.location.reload()

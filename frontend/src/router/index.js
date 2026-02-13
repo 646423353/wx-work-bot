@@ -28,10 +28,10 @@ const routes = [
         meta: { title: '群聊管理' }
       },
       {
-        path: 'alerts',
-        name: 'Alerts',
-        component: () => import('@/views/Alerts.vue'),
-        meta: { title: '告警配置' }
+        path: 'tasks',
+        name: 'Tasks',
+        component: () => import('@/views/Tasks.vue'),
+        meta: { title: '任务管理' }
       },
       {
         path: 'reports',

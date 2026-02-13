@@ -38,12 +38,15 @@
           </div>
         </div>
 
+
+
+
         <div class="stat-card bg-white rounded-xl p-6 border border-neutral-200 shadow-sm relative overflow-hidden">
           <div class="absolute top-0 right-0 w-24 h-24 bg-danger-50 rounded-full -mr-12 -mt-12"></div>
           <div class="flex items-start justify-between relative">
             <div>
-              <p class="text-sm font-medium text-neutral-500">未回复消息</p>
-              <p class="text-3xl font-bold text-danger-500 mt-2">{{ overview.unrepliedMessagesCount || 0 }}</p>
+              <p class="text-sm font-medium text-neutral-500">超时任务</p>
+              <p class="text-3xl font-bold text-danger-500 mt-2">{{ overview.overdueTasksCount || 0 }}</p>
               <div class="flex items-center gap-1 mt-2">
                 <span class="text-xs text-danger-600 font-medium">需立即处理</span>
               </div>
@@ -161,14 +164,8 @@
                     </div>
                   </td>
                   <td class="px-6 py-4 text-sm text-neutral-600">{{ group.todayMessages }}</td>
-                  <td class="px-6 py-4">
-                    <span :class="{
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger-100 text-danger-600': group.status === 'abnormal',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-600': group.status === 'warning',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-600': group.status === 'normal'
-                    }">
-                      {{ group.unreplied }}条{{ group.status === 'abnormal' ? '超时' : group.status === 'warning' ? '待处理' : '超时' }}
-                    </span>
+                  <td class="px-6 py-4 text-sm text-neutral-600">
+                    {{ group.unreplied }}条
                   </td>
                   <td class="px-6 py-4 text-sm" :class="{
                     'text-danger-600 font-medium': group.status === 'abnormal',
@@ -179,16 +176,11 @@
                   </td>
                   <td class="px-6 py-4 text-sm text-neutral-500">{{ group.lastActive }}</td>
                   <td class="px-6 py-4">
-                    <span :class="{
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger-50 text-danger-600': group.status === 'abnormal',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-50 text-warning-600': group.status === 'warning',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-600': group.status === 'normal'
+                    <span class="text-sm font-medium" :class="{
+                      'text-danger-600': group.status === 'abnormal',
+                      'text-warning-600': group.status === 'warning',
+                      'text-success-600': group.status === 'normal'
                     }">
-                      <span :class="{
-                        'w-1.5 h-1.5 bg-danger-500 rounded-full mr-1': group.status === 'abnormal',
-                        'w-1.5 h-1.5 bg-warning-500 rounded-full mr-1': group.status === 'warning',
-                        'w-1.5 h-1.5 bg-success-500 rounded-full mr-1': group.status === 'normal'
-                      }"></span>
                       {{ group.status === 'abnormal' ? '异常' : group.status === 'warning' ? '警告' : '正常' }}
                     </span>
                   </td>
@@ -223,19 +215,19 @@
               <el-icon :size="20" color="#ff4d4f">
                 <Warning />
               </el-icon>
-              <h2 class="text-lg font-semibold text-neutral-800">未回复告警</h2>
+              <h2 class="text-lg font-semibold text-neutral-800">超时任务</h2>
             </div>
-            <span class="flex items-center justify-center w-6 h-6 bg-danger-500 text-white text-xs font-bold rounded-full">{{ overview.unrepliedMessagesCount || 0 }}</span>
+            <span class="flex items-center justify-center w-6 h-6 bg-danger-500 text-white text-xs font-bold rounded-full">{{ overview.overdueTasksCount || 0 }}</span>
           </div>
           <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto">
-            <div v-for="alert in alerts" :key="alert.id" :class="['p-4 border rounded-xl', alert.priority === 'emergency' ? 'bg-danger-50 border-danger-200' : 'bg-warning-50 border-warning-200']">
+            <div v-for="alert in alerts" :key="alert.id" class="p-4 border rounded-xl bg-warning-50 border-warning-200">
               <div class="flex items-start justify-between mb-3">
                 <div class="flex items-center gap-2">
-                  <span :class="['px-2 py-0.5 rounded text-xs font-medium', alert.priority === 'emergency' ? 'bg-danger-500 text-white' : 'bg-warning-500 text-white']">
-                    {{ alert.priority === 'emergency' ? '紧急' : '警告' }}
+                  <span class="px-2 py-0.5 rounded text-xs font-medium bg-warning-500 text-white">
+                    超时
                   </span>
-                  <span :class="['text-xs', alert.priority === 'emergency' ? 'text-danger-600' : 'text-warning-600']">
-                    超时 {{ alert.timeout }}分钟
+                  <span class="text-xs text-warning-600">
+                    已等待 {{ alert.timeout }}分钟
                   </span>
                 </div>
                 <span class="text-xs text-neutral-400">{{ alert.time }}</span>
@@ -250,14 +242,9 @@
                   <span class="text-xs text-neutral-500">责任人: {{ alert.responsiblePerson }}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button class="p-1.5 text-primary-500 hover:bg-primary-50 rounded transition-colors" title="立即提醒">
+                  <button class="p-1.5 text-primary-500 hover:bg-primary-50 rounded transition-colors" title="快速回复" @click="handleOpenReply(alert)">
                     <el-icon :size="16" color="#0073e6">
-                      <Bell />
-                    </el-icon>
-                  </button>
-                  <button class="p-1.5 text-neutral-400 hover:text-primary-500 hover:bg-primary-50 rounded transition-colors" title="查看详情">
-                    <el-icon :size="16">
-                      <View />
+                      <ChatSquare />
                     </el-icon>
                   </button>
                 </div>
@@ -267,19 +254,46 @@
               <el-icon :size="48" color="#d9d9d9">
                 <CircleCheck />
               </el-icon>
-              <p class="text-sm text-neutral-500 mt-2">暂无未回复告警</p>
+              <p class="text-sm text-neutral-500 mt-2">暂无超时任务</p>
             </div>
           </div>
         </div>
       </section>
     </div>
   </div>
+    <el-dialog
+      v-model="replyDialogVisible"
+      title="快速回复"
+      width="500px"
+      append-to-body
+    >
+      <div class="mb-4">
+        <p class="text-sm text-neutral-500 mb-2">回复给：<span class="font-medium text-neutral-800">{{ currentReplyGroup?.groupName }}</span></p>
+        <p class="text-xs text-neutral-400 bg-neutral-50 p-2 rounded">
+          原消息：{{ currentReplyGroup?.content }}
+        </p>
+      </div>
+      <el-form :model="replyForm" :rules="replyRules" ref="replyFormRef">
+        <el-form-item prop="content">
+          <el-input
+            v-model="replyForm.content"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入回复内容..."
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="replyDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleConfirmReply" :loading="replySubmitting">发送回复</el-button>
+      </template>
+    </el-dialog>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useMonitoringStore } from '@/stores/monitoring'
-import { getGroupStats, getMonitoringAlerts } from '@/api'
+import { getGroupStats, getMonitoringAlerts, replyMessage } from '@/api'
 import { ElMessage } from 'element-plus'
 import {
   ChatLineRound,
@@ -289,7 +303,8 @@ import {
   View,
   CircleCheck,
   ChatDotRound,
-  Clock
+  Clock,
+  ChatSquare
 } from '@element-plus/icons-vue'
 
 const monitoringStore = useMonitoringStore()
@@ -303,6 +318,20 @@ const filterStatus = ref('all')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const loading = ref(false)
+
+// 回复相关
+const replyDialogVisible = ref(false)
+const replySubmitting = ref(false)
+const currentReplyGroup = ref(null)
+const replyFormRef = ref(null)
+const replyForm = reactive({
+  content: ''
+})
+const replyRules = {
+  content: [
+    { required: true, message: '请输入回复内容', trigger: 'blur' }
+  ]
+}
 
 const filteredGroups = computed(() => {
   let result = groups.value
@@ -365,6 +394,40 @@ function handleSizeChange(val) {
 
 function handleCurrentChange(val) {
   currentPage.value = val
+}
+
+// 打开回复弹窗
+function handleOpenReply(alert) {
+  currentReplyGroup.value = alert
+  replyForm.content = ''
+  replyDialogVisible.value = true
+}
+
+// 确认回复
+async function handleConfirmReply() {
+  if (!replyFormRef.value) return
+  
+  await replyFormRef.value.validate(async (valid) => {
+    if (valid) {
+      replySubmitting.value = true
+      try {
+        await replyMessage({
+          group_id: currentReplyGroup.value.groupId,
+          content: replyForm.content
+        })
+        
+        ElMessage.success('回复发送成功')
+        replyDialogVisible.value = false
+        // 刷新数据，告警应该会消失
+        fetchData()
+        
+      } catch (error) {
+        ElMessage.error('发送回复失败')
+      } finally {
+        replySubmitting.value = false
+      }
+    }
+  })
 }
 
 onMounted(() => {
